@@ -4,13 +4,13 @@
 Contributing
 ============
 
-Welcome to ``gilda-opts`` contributor's guide.
+Welcome to ``gilda-local`` contributor's guide.
 
 
 Issue Reports
 =============
 
-If you experience bugs or general issues with ``gilda-opts``, please have a look
+If you experience bugs or general issues with ``gilda-local``, please have a look
 on the `issue tracker`_. If you don't see anything useful there, please feel
 free to fire an issue report.
 
@@ -32,8 +32,8 @@ you help us to identify the root cause of the issue.
 .. |the repository service| replace:: GitHub
 .. |contribute button| replace:: "Create pull request"
 
-.. _repository: https://github.com/marcelomatus/gilda-opts
-.. _issue tracker: https://github.com/marcelomatus/gilda-opts/issues
+.. _repository: https://github.com/marcelomatus/gilda-local
+.. _issue tracker: https://github.com/marcelomatus/gilda-local/issues
 .. <-- end -->
 
 

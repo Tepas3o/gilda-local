@@ -5,9 +5,9 @@ import logging
 import sys
 import os
 
-from gilda_opts import __version__
-from gilda_opts.system import System
-from gilda_opts.system_lp import SystemLP
+from gilda_local import __version__
+from gilda_local.system import System
+from gilda_local.system_lp import SystemLP
 
 __author__ = "Marcelo Matus"
 __copyright__ = "Marcelo Matus"
@@ -19,7 +19,7 @@ _logger = logging.getLogger(__name__)
 # ---- Python API ----
 # The functions defined in this section can be imported by users in their
 # Python scripts/interactive interpreter, e.g. via
-# `from gilda_opts.skeleton import fib`,
+# `from gilda_local.skeleton import fib`,
 # when using this Python module as a library.
 
 
@@ -32,13 +32,13 @@ _logger = logging.getLogger(__name__)
 def parse_args(args):
     """Parse command line parameters."""
     parser = argparse.ArgumentParser(
-        prog="gilda_opts", description="Gilda Optimization Scheduler"
+        prog="gilda_local", description="Gilda Optimization Scheduler"
     )
 
     parser.add_argument(
         "--version",
         action="version",
-        version=f"gilda-opts {__version__}",
+        version=f"gilda-local {__version__}",
     )
     parser.add_argument(
         "-i",
@@ -149,6 +149,6 @@ if __name__ == "__main__":
     # After installing your project with pip, users can also run your Python
     # modules as scripts via the ``-m`` flag, as defined in PEP 338::
     #
-    #     python -m gilda_opts.skeleton
+    #     python -m gilda_local.skeleton
     #
     run()

@@ -1,5 +1,5 @@
 ==========
-Gilda-opts
+Gilda-local
 ==========
 
 

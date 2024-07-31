@@ -6,7 +6,7 @@ Getting Started
 System Requirements
 ===================
 
-To use ``GILDA-OPTS`` you will need:
+To use ``GILDA-LOCAL`` you will need:
 
 * Python 3.11.9, up and running. We strongly recommend the use of `pyenv`_  or `virtualenv`_ for this, either in Linux or Windows.
 * Python libraries or packages (`pyomo`, `numpy` and others), but these will
@@ -26,7 +26,7 @@ To use ``GILDA-OPTS`` you will need:
 Installation
 ============
 
-The sources for ``GILDA-OPTS`` can be downloaded from the `Github repository`_.
+The sources for ``GILDA-LOCAL`` can be downloaded from the `Github repository`_.
 
 0. Verify that `python` is working with the expected version.
 
@@ -43,25 +43,25 @@ The sources for ``GILDA-OPTS`` can be downloaded from the `Github repository`_.
 
 1. You can either download or clone the public repository. For cloning use:
 
-   ``$ git clone https://github.com/marcelomatus/gilda-opts.git``
+   ``$ git clone https://github.com/marcelomatus/gilda-local.git``
 
-   This is the preferred method to install ``GILDA-OPTS``, as it will always
+   This is the preferred method to install ``GILDA-LOCAL``, as it will always
    install the most recent stable release.
 
 
 2. Once you have a copy of the source, you can install it running this command
    in your terminal:
 
-  ``$ cd gilda-opts``
+  ``$ cd gilda-local``
 
   ``$ pip install .``
 
 
-Once installed, you can verify that ``GILDA-OPTS`` is available by executing:
+Once installed, you can verify that ``GILDA-LOCAL`` is available by executing:
 
-   ``$ gilda_opts -h``
+   ``$ gilda_local -h``
 
-This should display the following ``GILDA-OPTS`` options:
+This should display the following ``GILDA-LOCAL`` options:
 
 =======================================  =================================================
 -h, --help                               show this help message and exit
@@ -87,7 +87,7 @@ Preparing Case Input Data
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The full details of the input data files are documented in :ref:`Modeling`. The
-``GILDA-OPTS`` distribution also includes some :ref:`Examples` that illustrate
+``GILDA-LOCAL`` distribution also includes some :ref:`Examples` that illustrate
 how to accurately input data to construct and simulate the system.
 
 
@@ -95,16 +95,16 @@ how to accurately input data to construct and simulate the system.
 Trying some examples
 ^^^^^^^^^^^^^^^^^^^^
 
-``GILDA-OPTS`` invoked by calling the command `gilda_opts` and passing a JSON
+``GILDA-LOCAL`` invoked by calling the command `gilda_local` and passing a JSON
 file describing the scenario to optimize.
 
-For example, in the `cases` directory inside the `gilda_opts` distribution, you
+For example, in the `cases` directory inside the `gilda_local` distribution, you
 will find several examples to run. One of them is ``demand_grid.json``, which
 describes a simple demand and grid configuration.
 
-To run ``GILDA-OPTS`` on this case, type the following  ``shell``  command:
+To run ``GILDA-LOCAL`` on this case, type the following  ``shell``  command:
 
-``$ gilda_opts -i cases/demand_grid.json``
+``$ gilda_local -i cases/demand_grid.json``
 
 
 ^^^^^^^^^^^^^^^^^^^^^
@@ -114,7 +114,7 @@ Accessing the Results
 The results of the simulation will be printed on the screen. If you want to save
 the output in a given output file, use the following command:
 
-``$ gilda_opts -i cases/demand_grid.json -o demand_grid_output.json``
+``$ gilda_local -i cases/demand_grid.json -o demand_grid_output.json``
 
 The output file, which contains the optimal scheduling of the scenario, is also
 a JSON file, which can be read visually or using some very interesting JSON
@@ -124,14 +124,14 @@ libraries, such as `orjson`_.
 Documentation
 =============
 
-The primary source of documentation for ``GILDA-OPTS`` is this manual, which
-gives an overview of ``GILDA-OPTS``’s capabilities, describes the elements
+The primary source of documentation for ``GILDA-LOCAL`` is this manual, which
+gives an overview of ``GILDA-LOCAL``’s capabilities, describes the elements
 structure, modeling and formulations behind the code. It can be found in your
-``GILDA-OPTS`` distribution from the `Github repository`_.
+``GILDA-LOCAL`` distribution from the `Github repository`_.
 
 
 .. _pyenv: https://github.com/pyenv/pyenv
 .. _virtualenv: https://pypi.org/project/orjson/
-.. _Github repository: https://github.com/marcelomatus/gilda-opts
+.. _Github repository: https://github.com/marcelomatus/gilda-local
 .. _chocolatey: https://chocolatey.org
 .. _orjson: https://pypi.org/project/orjson

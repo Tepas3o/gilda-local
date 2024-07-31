@@ -1,4 +1,4 @@
-# Gilda-opts
+# Gilda-local
 
 Welcome to the Gilda Optimization and Scheduling module.
 

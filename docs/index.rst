@@ -1,8 +1,8 @@
 ==========
-Gilda-opts
+Gilda-local
 ==========
 
-Welcome to the **gilda-opts** documentation!.
+Welcome to the **gilda-local** documentation!.
 
 .. note::
 

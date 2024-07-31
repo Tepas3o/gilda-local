@@ -34,8 +34,8 @@ except ImportError:
     from sphinx import apidoc
 
 output_dir = os.path.join(__location__, "api")
-module_dir = os.path.join(__location__, "../src/gilda_opts")
-exclude_pattern = "../*/*/*_lp.py ../*/*/*_sched.py ../*/*/utils.py ../*/*/base*py"
+module_dir = os.path.join(__location__, "../src/gilda_local")
+exclude_pattern = ""
 # exclude_pattern=""
 try:
     shutil.rmtree(output_dir)
@@ -94,7 +94,7 @@ source_suffix = ".rst"
 master_doc = "index"
 
 # General information about the project.
-project = "gilda-opts"
+project = "gilda-local"
 copyright = "2024, Marcelo Matus"
 
 # The version info for the project you're documenting, acts as replacement for
@@ -106,7 +106,7 @@ copyright = "2024, Marcelo Matus"
 # If you don’t need the separation provided between version and release,
 # just set them both to the same value.
 try:
-    from gilda_opts import __version__ as version
+    from gilda_local import __version__ as version
 except ImportError:
     version = ""
 
@@ -233,7 +233,7 @@ html_static_path = ["_static"]
 # html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = "gilda-opts-doc"
+htmlhelp_basename = "gilda-local-doc"
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -250,7 +250,7 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-    ("index", "user_guide.tex", "gilda-opts Documentation", "Marcelo Matus", "manual")
+    ("index", "user_guide.tex", "gilda-local Documentation", "Marcelo Matus", "manual")
 ]
 
 # The name of an image file (relative to this directory) to place at the top of

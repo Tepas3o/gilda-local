@@ -1,5 +1,5 @@
 """
-Setup file for gilda-opts.
+Setup file for gilda-local.
 Use setup.cfg to configure your project.
 
 This file was generated with PyScaffold 4.5.
