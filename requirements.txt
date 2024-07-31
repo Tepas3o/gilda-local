@@ -1,8 +1,5 @@
-flask
-waitress
 scipy
 numpy
-pyomo@git+https://github.com/Pyomo/pyomo.git
 pathlib
 dataclasses
 dataclasses-json
