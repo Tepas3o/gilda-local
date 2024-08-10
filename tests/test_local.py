@@ -1,22 +1,23 @@
+"""Tests for gilda-local."""
+
 # import os
 # from datetime import datetime, timedelta
 # from homeassistant_api import Client
 # import numpy as np
 
-import mariadb
 
-import gilda_local
-
-
-def to_float(str):
+def to_float(s):
+    """Convert to float."""
     try:
-        return float(str)
-    except:  # pylint: disable=E722
+        return float(s)
+    except Exception:  # pylint: disable=W0718
         return float("nan")
 
 
 def test_local():
+    """Test local."""
     assert to_float("1.5") == 1.5
+
 
 # def test_local_1():
 #     # Configuración de la conexión a la base de datos
@@ -70,7 +71,7 @@ def test_local():
 #     )  # Used to aunthenticate yourself with homeassistant
 #     # See the documentation on how to obtain a Long Lived Access Token
 
-#     token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiI2NGZlZjIzYTAzNmQ0YTJhOGI2NDNmYzY3MTU2OGMyNyIsImlhdCI6MTcyMjQwMzc2MCwiZXhwIjoyMDM3NzYzNzYwfQ.PF--9gieQrCSrA150E58hvZiYNUcIKA3NVf9o76UF40"
+#     token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiI2NGZlZjIzYTAzNmQ0YTJhOGI2NDNmYzY3MTU2OGMyNyIsImlhdCI6MTcyMjQwMzc2MCwiZXhwIjoyMDM3NzYzNzYwfQ.PF--9gieQrCSrA150E58hvZiYNUcIKA3NVf9o76UF40" # pylint: disable=C0301
 
 #     assert token is not None
 
@@ -111,6 +112,3 @@ def test_local():
 #             print("df", df)
 
 #         assert False
-
-
-

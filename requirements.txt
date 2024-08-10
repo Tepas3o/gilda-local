@@ -1,7 +1,9 @@
+fastapi
+asyncio
+uvicorn
 homeassistant_api
 scipy
 numpy
 pathlib
 mariadb
-homeassistant_api
 importlib-metadata

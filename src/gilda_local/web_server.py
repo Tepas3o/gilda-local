@@ -1,20 +1,20 @@
 """Web server module for Gilda_local."""
 
 import os
-
-from datetime import timedelta
-from fastapi import FastAPI, BackgroundTasks
-from pydantic import BaseModel
 import asyncio
+from datetime import timedelta
 
+from pydantic import BaseModel
+import uvicorn
+from fastapi import FastAPI, BackgroundTasks
 from homeassistant_api import Client
 
 app = FastAPI()
 
-api_url = "http://127.0.0.1:8123/api"
-api_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiI2NGZlZjIzYTAzNmQ0YTJhOGI2NDNmYzY3MTU2OGMyNyIsImlhdCI6MTcyMjQwMzc2MCwiZXhwIjoyMDM3NzYzNzYwfQ.PF--9gieQrCSrA150E58hvZiYNUcIKA3NVf9o76UF40"
+API_URL = "http://127.0.0.1:8123/api"
+API_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiI2NGZlZjIzYTAzNmQ0YTJhOGI2NDNmYzY3MTU2OGMyNyIsImlhdCI6MTcyMjQwMzc2MCwiZXhwIjoyMDM3NzYzNzYwfQ.PF--9gieQrCSrA150E58hvZiYNUcIKA3NVf9o76UF40"  # pylint: disable=C0301
 
-client = Client(api_url, api_token)
+client = Client(API_URL, API_TOKEN)
 
 
 class DeferralStartRequest(BaseModel):
@@ -43,36 +43,31 @@ async def async_deferral_start_process(request: DeferralStartRequest):
 
 
 @app.post("/deferral_start")
-async def deferral_start(request: DeferralStartRequest,
-                         background_tasks: BackgroundTasks):
-    """deferral start process."""
-
+async def deferral_start(
+    request: DeferralStartRequest, background_tasks: BackgroundTasks
+):
+    """Deferral start process."""
     background_tasks.add_task(async_deferral_start_process, request)
 
     deferral_entity = request.deferral_entity
     start_entity = request.start_entity
     on_period = request.on_period
 
-    return {"message":
-            f""""Deferral start request for {deferral_entity} using on period
-            {on_period} and trigger entity {start_entity}"""}
+    return {
+        "message": f""""Deferral start request for {deferral_entity} using on period
+            {on_period} and trigger entity {start_entity}"""
+    }
 
 
 # Gilda default port
 GILDALOCAL_ADDR = "0.0.0.0"
 # Gilda default port
 GILDALOCAL_PORT = 5024
-# 400 is the HTTP status code for Bad Request
-BAD_REQUEST = 400
-# 200 is the HTTP status code for OK
-OK_REQUEST = 200
+
 
 def run():
-    import uvicorn
-
+    """Run method."""
     address = os.environ.get("GILDALOCAL_ADDR", GILDALOCAL_ADDR)
     port = int(os.environ.get("PORT", GILDALOCAL_PORT))
 
-
     uvicorn.run(app, host=address, port=port)
-
