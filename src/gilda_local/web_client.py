@@ -3,7 +3,7 @@
 import requests
 
 # Server URL
-BASE_URL = "http://127.0.0.1:5012"
+BASE_URL = "http://192.168.1.85:5024"
 
 
 data = {
@@ -14,4 +14,4 @@ data = {
 
 response = requests.post(f"{BASE_URL}/deferral_start", json=data, timeout=100)
 
-print("Respuesta de Action 1:", response.json())
+print("Respuesta:", response.json())
