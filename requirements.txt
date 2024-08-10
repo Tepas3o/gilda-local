@@ -1,6 +1,7 @@
+homeassistant_api
 scipy
 numpy
 pathlib
-dataclasses
-dataclasses-json
+mariadb
+homeassistant_api
 importlib-metadata
