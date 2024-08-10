@@ -69,7 +69,7 @@ async def deferral_start(
 
 
 # Gilda default port
-GILDALOCAL_ADDR = "0.0.0.0"
+GILDALOCAL_ADDR = "127.0.0.1"
 # Gilda default port
 GILDALOCAL_PORT = 5024
 
