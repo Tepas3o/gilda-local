@@ -12,7 +12,7 @@ from homeassistant_api import Client
 app = FastAPI()
 
 API_URL = "http://127.0.0.1:8123/api"
-API_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiI2NGZlZjIzYTAzNmQ0YTJhOGI2NDNmYzY3MTU2OGMyNyIsImlhdCI6MTcyMjQwMzc2MCwiZXhwIjoyMDM3NzYzNzYwfQ.PF--9gieQrCSrA150E58hvZiYNUcIKA3NVf9o76UF40"  # pylint: disable=C0301
+API_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiI2NGZlZjIzYTAzNmQ0YTJhOGI2NDNmYzY3MTU2OGMyNyIsImlhdCI6MTcyMjQwMzc2MCwiZXhwIjoyMDM3NzYzNzYwfQ.PF--9gieQrCSrA150E58hvZiYNUcIKA3NVf9o76UF40"  # pylint: disable=C0301 # noqa
 
 client = Client(API_URL, API_TOKEN)
 
@@ -30,14 +30,23 @@ async def async_deferral_start_process(request: DeferralStartRequest):
     await asyncio.sleep(2)
 
     timer_domain = client.get_domain("timer")
+    if timer_domain is None:
+        return
+
     timer_domain.start(entity_id=request.start_entity, duration="0:01:23")
 
     timer = client.get_entity(entity_id=request.start_entity)
+    if timer is None:
+        return
+
     print("attributes", timer.state.attributes)
 
     # timer.start({'duration': "0:01:23"})
 
     state = client.set_state(timer.state)
+
+    if state is None:
+        return
 
     print("state", state)
 
