@@ -9,13 +9,14 @@ import uvicorn
 from fastapi import FastAPI, BackgroundTasks
 from homeassistant_api import Client
 
-app = FastAPI()
 
 API_URL = "http://192.168.1.85:8123/api"
 API_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiI2NGZlZjIzYTAzNmQ0YTJhOGI2NDNmYzY3MTU2OGMyNyIsImlhdCI6MTcyMjQwMzc2MCwiZXhwIjoyMDM3NzYzNzYwfQ.PF--9gieQrCSrA150E58hvZiYNUcIKA3NVf9o76UF40"  # pylint: disable=C0301 # noqa
 
-client = Client(API_URL, API_TOKEN)
+#client = Client(API_URL, API_TOKEN)
+client = None
 
+app = FastAPI()
 
 class DeferralStartRequest(BaseModel):
     """Deferral start request message."""
@@ -56,7 +57,7 @@ async def deferral_start(
     request: DeferralStartRequest, background_tasks: BackgroundTasks
 ):
     """Deferral start process."""
-    #background_tasks.add_task(async_deferral_start_process, request)
+    # background_tasks.add_task(async_deferral_start_process, request)
 
     deferral_entity = request.deferral_entity
     start_entity = request.start_entity
@@ -69,7 +70,7 @@ async def deferral_start(
 
 
 # Gilda default port
-GILDALOCAL_ADDR = "127.0.0.1"
+GILDALOCAL_ADDR = "0.0.0.0"
 # Gilda default port
 GILDALOCAL_PORT = 5024
 
