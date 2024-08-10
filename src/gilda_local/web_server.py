@@ -56,7 +56,7 @@ async def deferral_start(
     request: DeferralStartRequest, background_tasks: BackgroundTasks
 ):
     """Deferral start process."""
-    background_tasks.add_task(async_deferral_start_process, request)
+    #background_tasks.add_task(async_deferral_start_process, request)
 
     deferral_entity = request.deferral_entity
     start_entity = request.start_entity
@@ -77,6 +77,7 @@ GILDALOCAL_PORT = 5024
 def run():
     """Run method."""
     address = os.environ.get("GILDALOCAL_ADDR", GILDALOCAL_ADDR)
+    address = GILDALOCAL_ADDR
     port = int(os.environ.get("PORT", GILDALOCAL_PORT))
 
     uvicorn.run(app, host=address, port=port)
