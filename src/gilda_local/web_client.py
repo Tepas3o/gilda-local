@@ -4,7 +4,7 @@ import requests
 
 # Server URL
 BASE_URL = "http://192.168.1.85:5024"
-BASE_URL = "http://127.0.0.1:5024"
+# BASE_URL = "http://127.0.0.1:5024"
 
 
 data = {
