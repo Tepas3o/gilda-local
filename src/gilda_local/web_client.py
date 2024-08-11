@@ -12,6 +12,6 @@ data = {
     "on_period": "1:00:00",
 }
 
-response = requests.post(f"{BASE_URL}/deferral_start", json=data)
+response = requests.post(f"{BASE_URL}/deferral_start", json=data, timeout=10)
 
 print("Respuesta:", response.json())

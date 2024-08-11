@@ -13,8 +13,7 @@ from homeassistant_api import Client
 API_URL = "http://192.168.1.85:8123/api"
 API_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiI2NGZlZjIzYTAzNmQ0YTJhOGI2NDNmYzY3MTU2OGMyNyIsImlhdCI6MTcyMjQwMzc2MCwiZXhwIjoyMDM3NzYzNzYwfQ.PF--9gieQrCSrA150E58hvZiYNUcIKA3NVf9o76UF40"  # pylint: disable=C0301 # noqa
 
-#client = Client(API_URL, API_TOKEN)
-client = None
+client = None if True else Client(API_URL, API_TOKEN) #  pylint: disable=C0103, W0125
 
 app = FastAPI()
 
@@ -54,7 +53,8 @@ async def async_deferral_start_process(request: DeferralStartRequest):
 
 @app.post("/deferral_start")
 async def deferral_start(
-    request: DeferralStartRequest, background_tasks: BackgroundTasks
+        request: DeferralStartRequest,
+        background_tasks: BackgroundTasks #  pylint: disable=W0613
 ):
     """Deferral start process."""
     # background_tasks.add_task(async_deferral_start_process, request)
