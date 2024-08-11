@@ -7,11 +7,21 @@ from datetime import timedelta
 from pydantic import BaseModel
 import uvicorn
 from fastapi import FastAPI, BackgroundTasks
-from homeassistant_api import Client
+import requests
+
+# from homeassistant_api import Client
+# token = os.environ.get("SUPERVISOR_TOKEN", API_TOKEN)
+# client = Client(API_URL, token)
 
 
 API_URL = "http://supervisor/core/api"
 API_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiI2NGZlZjIzYTAzNmQ0YTJhOGI2NDNmYzY3MTU2OGMyNyIsImlhdCI6MTcyMjQwMzc2MCwiZXhwIjoyMDM3NzYzNzYwfQ.PF--9gieQrCSrA150E58hvZiYNUcIKA3NVf9o76UF40"  # pylint: disable=C0301 # noqa
+
+API_URL = "http://192.168.1.85:8123/api/services/timer/start"
+
+base_url = os.environ.get("BASE_URL", API_URL)
+
+headers = {"Authorization": "Bearer " + API_TOKEN}
 
 
 app = FastAPI()
@@ -29,29 +39,23 @@ async def async_deferral_start_process(request: DeferralStartRequest):
     """async_deferral_start_process."""
     await asyncio.sleep(2)
 
-    token = os.environ.get("SUPERVISOR_TOKEN", API_TOKEN)
-    client = Client(API_URL, token)
+    data = {"entity_id": request.start_entity, "duration": "0:01:23"}
 
-    timer_domain = client.get_domain("timer")
-    if timer_domain is None:
-        return
+    response = requests.post(base_url, headers=headers, json=data)
+    print("response", response.json())
 
-    timer_domain.start(entity_id=request.start_entity, duration="0:01:23")
-
-    timer = client.get_entity(entity_id=request.start_entity)
-    if timer is None:
-        return
-
-    print("attributes", timer.state.attributes)
-
-    # timer.start({'duration': "0:01:23"})
-
-    state = client.set_state(timer.state)
-
-    if state is None:
-        return
-
-    print("state", state)
+    # timer_domain = client.get_domain("timer")
+    # if timer_domain is None:
+    #     return
+    # timer_domain.start(entity_id=request.start_entity, duration="0:01:23")
+    # timer = client.get_entity(entity_id=request.start_entity)
+    # if timer is None:
+    #     return
+    # print("attributes", timer.state.attributes)
+    # # timer.start({'duration': "0:01:23"})
+    # state = client.set_state(timer.state)
+    # if state is None:
+    #     return
 
 
 @app.post("/deferral_start")
