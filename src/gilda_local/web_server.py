@@ -81,7 +81,7 @@ def run():
     address = GILDALOCAL_ADDR
     port = int(os.environ.get("PORT", GILDALOCAL_PORT))
 
-    uvicorn.run(app, host=address, port=port, reload=True, workers=3)
+    uvicorn.run(app, host=address, port=port, reload=True)
 
 
 if __name__ == "__main__":
