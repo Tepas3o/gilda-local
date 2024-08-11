@@ -13,7 +13,7 @@ from homeassistant_api import Client
 API_URL = "http://192.168.1.85:8123/api"
 API_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiI2NGZlZjIzYTAzNmQ0YTJhOGI2NDNmYzY3MTU2OGMyNyIsImlhdCI6MTcyMjQwMzc2MCwiZXhwIjoyMDM3NzYzNzYwfQ.PF--9gieQrCSrA150E58hvZiYNUcIKA3NVf9o76UF40"  # pylint: disable=C0301 # noqa
 
-client = Client(API_URL, API_TOKEN)
+client = Client(API_URL, API_TOKEN, use_async=True)
 
 app = FastAPI()
 
