@@ -34,7 +34,7 @@ async def async_deferral_start_process(request: DeferralStartRequest):
     if timer_domain is None:
         return
 
-    timer_domain.start(entity_id=request.start_entity, duration="0:01:23")
+    await timer_domain.start(entity_id=request.start_entity, duration="0:01:23")
 
     timer = client.get_entity(entity_id=request.start_entity)
     if timer is None:
