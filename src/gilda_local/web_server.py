@@ -13,7 +13,6 @@ from homeassistant_api import Client
 API_URL = "http://192.168.1.85:8123/api"
 API_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiI2NGZlZjIzYTAzNmQ0YTJhOGI2NDNmYzY3MTU2OGMyNyIsImlhdCI6MTcyMjQwMzc2MCwiZXhwIjoyMDM3NzYzNzYwfQ.PF--9gieQrCSrA150E58hvZiYNUcIKA3NVf9o76UF40"  # pylint: disable=C0301 # noqa
 
-client = Client(API_URL, API_TOKEN, use_async=True)
 
 app = FastAPI()
 
@@ -30,11 +29,13 @@ async def async_deferral_start_process(request: DeferralStartRequest):
     """async_deferral_start_process."""
     await asyncio.sleep(2)
 
+    client = Client(API_URL, API_TOKEN)
+
     timer_domain = client.get_domain("timer")
     if timer_domain is None:
         return
 
-    await timer_domain.start(entity_id=request.start_entity, duration="0:01:23")
+    timer_domain.start(entity_id=request.start_entity, duration="0:01:23")
 
     timer = client.get_entity(entity_id=request.start_entity)
     if timer is None:
