@@ -10,7 +10,7 @@ from fastapi import FastAPI, BackgroundTasks
 from homeassistant_api import Client
 
 
-API_URL = "http://127.0.0.1:8123/api"
+API_URL = "http://supervisor/core/api"
 API_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiI2NGZlZjIzYTAzNmQ0YTJhOGI2NDNmYzY3MTU2OGMyNyIsImlhdCI6MTcyMjQwMzc2MCwiZXhwIjoyMDM3NzYzNzYwfQ.PF--9gieQrCSrA150E58hvZiYNUcIKA3NVf9o76UF40"  # pylint: disable=C0301 # noqa
 
 
@@ -29,7 +29,8 @@ async def async_deferral_start_process(request: DeferralStartRequest):
     """async_deferral_start_process."""
     await asyncio.sleep(2)
 
-    client = Client(API_URL, API_TOKEN)
+    token = os.environ.get("SUPERVISOR_TOKEN", API_TOKEN)
+    client = Client(API_URL, token)
 
     timer_domain = client.get_domain("timer")
     if timer_domain is None:
