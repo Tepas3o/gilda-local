@@ -3,8 +3,7 @@ fastapi
 asyncio
 uvicorn
 homeassistant_api
-scipy
 numpy
+pandas
 pathlib
 mariadb
-importlib-metadata

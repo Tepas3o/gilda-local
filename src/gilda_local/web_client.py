@@ -4,20 +4,17 @@ import os
 import requests
 
 # Server URL
-API_URL = "http://192.168.1.85:8123/api/services/timer/start"
-# API_URL = "http://127.0.0.1:5024"
+BASE_URL = "http://192.168.1.85:5024"
+# BASE_URL = "http://127.0.0.1:5024"
 
-API_TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiI2NGZlZjIzYTAzNmQ0YTJhOGI2NDNmYzY3MTU2OGMyNyIsImlhdCI6MTcyMjQwMzc2MCwiZXhwIjoyMDM3NzYzNzYwfQ.PF--9gieQrCSrA150E58hvZiYNUcIKA3NVf9o76UF40"  # pylint: disable=C0301 # noqa
-
-base_url = os.environ.get("API_URL", API_URL)
-
-headers = {"Authorization": "Bearer " + API_TOKEN}
+base_url = os.environ.get("BASE_URL", BASE_URL)
 
 data = {
-    "entity_id": "timer.gilda_remote_start_timer",
-    "duration": "0:01:23"
+    "deferral_entity": "lavadora",
+    "timer_entity": "timer.gilda_remote_start_timer",
+    "on_period": "1:00:00",
 }
 
-response = requests.post(base_url, headers=headers, json=data)
+response = requests.post(f"{base_url}/deferral_start", json=data, timeout=10)
 
 print("Respuesta:", response.json())
