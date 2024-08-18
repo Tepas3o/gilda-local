@@ -5,16 +5,7 @@ from datetime import datetime, timedelta
 import mariadb
 import pandas as pd
 
-from pydantic import BaseModel
-
-
-class SQLConfig(BaseModel):
-    """SQL Config to establish the connection."""
-    user: str = "homeassistant"
-    password: str
-    host: str = "homeassistant.local"
-    database: str = "homeassistant"
-    port: int = 3306
+from gilda_local.sql_config import SQLConfig
 
 
 class HASQLConn:
@@ -35,8 +26,8 @@ class HASQLConn:
         self,
         entity_id: str,
         start_time: datetime | None = None,
-        stop_time: datetime | None = None,
-        interpolation_method: str | None = None,
+        end_time: datetime | None = None,
+        frequency: str | None = "1h",
     ):
         """Get the state history for a given entity.
 
@@ -46,37 +37,41 @@ class HASQLConn:
         cursor = self.conn.cursor()
         # Consulta SQL
 
-        stop_time_ts = (
-            stop_time.timestamp()
-            if stop_time is not None
-            else datetime.now().timestamp()
-        ) + 2
+        end_time_ts = (
+            end_time.timestamp()
+            if end_time is not None
+            else datetime.now().replace(microsecond=0).timestamp()
+        )
         start_time_ts = (
             start_time.timestamp()
             if start_time is not None
-            else stop_time_ts - (24 * 60 * 60) - 2
-        ) - 2
+            else end_time_ts - (24 * 3600)
+        )
+
+        start_time = datetime.fromtimestamp(start_time_ts)
+        end_time = datetime.fromtimestamp(end_time_ts)
+
+        if frequency:
+            end_time_ts += 2 * 3600
+            start_time_ts -= 2 * 3600
 
         query = f"""
         SELECT last_updated_ts, state
         FROM states
         INNER JOIN states_meta ON states.metadata_id = states_meta.metadata_id
         WHERE states_meta.entity_id = '{entity_id}'
-        AND last_updated_ts BETWEEN {start_time_ts} AND {stop_time_ts}
+        AND last_updated_ts BETWEEN {start_time_ts} AND {end_time_ts}
         ORDER BY last_updated_ts
         """
 
-        # Ejecutar la consulta
         cursor.execute(query)
 
-        # Obtener el resultado
+        # get the raw data
         ts_col = []
         state_col = []
         for ts, state in cursor:
             try:
-                date_hour = datetime.fromtimestamp(float(ts)).replace(
-                    minute=0, second=0, microsecond=0
-                )
+                date_hour = datetime.fromtimestamp(float(ts))
                 value = float(state)
 
                 ts_col.append(date_hour)
@@ -84,64 +79,53 @@ class HASQLConn:
             except Exception:  # pylint: disable=W0718
                 pass
 
-        data = {"timestamp": ts_col, entity_id: state_col}
-
-        df = pd.DataFrame(data)
-
+        df = pd.DataFrame({"timestamp": ts_col, entity_id: state_col})
         df.set_index("timestamp", inplace=True)
 
         # remove the duplicate timestamps
         df = df[~df.index.duplicated(keep="last")]
 
         # fill the gaps
-        if interpolation_method:
-            df = df.interpolate(method=interpolation_method)
+        if frequency:
+            desired_index = pd.date_range(
+                start=start_time, end=end_time, freq=frequency
+            )
+            df = (
+                df.reindex(df.index.union(desired_index))
+                .interpolate(method="time")
+                .reindex(desired_index)
+                .sort_index()
+            )
 
-        return df
+        return df.dropna()
 
     def get_state_histories(
         self,
         entity_ids: list[str],
         start_time: datetime | None = None,
-        stop_time: datetime | None = None,
-        interpolation_method: str | None = None,
+        end_time: datetime | None = None,
+        frequency: str | None = "1h",
     ):
         """Get the state history for a given entities.
 
         entity_ids: list of entity names.
-
         """
+
+        end_time = (
+            end_time if end_time is not None else datetime.now().replace(microsecond=0)
+        )
+        start_time = (
+            start_time if start_time is not None else end_time - timedelta(hours=24)
+        )
+
         if len(entity_ids) == 0:
             return None
 
-        stop_time = stop_time if stop_time is not None else datetime.now()
-        start_time = (
-            start_time if start_time is not None else stop_time - timedelta(hours=24)
-        )
-
-        df = self.get_state_history(
-            entity_ids[0], start_time, stop_time, interpolation_method
-        )
-        if len(entity_ids) > 1:
-            for entity_id in entity_ids[1:]:
-                df_e = self.get_state_history(
-                    entity_id, start_time, stop_time, interpolation_method
-                )
-                df = pd.merge(df, df_e, left_index=True, right_index=True, how="outer")
-
-        if interpolation_method:
-            df = df.interpolate(method=interpolation_method)
+        df = self.get_state_history(entity_ids[0], start_time, end_time, frequency)
+        for entity_id in entity_ids[1:]:
+            df_e = self.get_state_history(
+                entity_id, start_time, end_time, frequency
+            )
+            df = pd.merge(df, df_e, left_index=True, right_index=True, how="outer")
 
         return df
-
-
-if __name__ == "__main__":
-    sql_config = SQLConfig(user="homeassistant", password="elperro123", host="192.168.1.85")
-    conn = HASQLConn(sql_config)
-
-    sh = conn.get_state_histories(
-        [
-            "sensor.electricity_maps_co2_intensity",
-            "sensor.electricity_maps_co2_intensity",
-        ]
-    )

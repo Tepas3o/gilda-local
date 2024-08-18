@@ -1,18 +1,14 @@
 """Web server module for Gilda_local."""
 
 import os
-from datetime import timedelta
 import asyncio
 import logging
 
-from pydantic import BaseModel
 import uvicorn
 from fastapi import FastAPI, BackgroundTasks
 import requests
 
-# from homeassistant_api import Client
-# token = os.environ.get("SUPERVISOR_TOKEN", API_TOKEN)
-# client = Client(API_URL, token)
+from gilda_local.deferred_load import DeferredLoadRequest, DeferredLoad
 
 
 HA_API_URL = "http://192.168.1.85:8123/api"
@@ -26,24 +22,22 @@ headers = {"Authorization": "Bearer " + ha_api_token}
 logger = logging.getLogger("uvicorn")
 
 
-class DeferredLoadRequest(BaseModel):
-    """Deferred load request message."""
-
-    deferred_entity: str
-    on_period: timedelta
-    timer_entity: str
-
-
 async def async_deferred_load_process(request: DeferredLoadRequest):
     """async_deferred_load_process."""
     await asyncio.sleep(2)
 
     # send data to gilda_opts
 
-    data = {"entity_id": request.timer_entity, "duration": "0:01:23"}
+    try:
+        on_delay = DeferredLoad(request).get_on_delay()
+    except Exception as e:
+        logger.info(f"Error computing the on_delay {str(e)}")
+        on_delay = "0:00:00"
 
+    logger.info(f"Calculated on_delay of {on_delay}")
+
+    data = {"entity_id": request.timer_entity, "duration": str(on_delay)}
     start_timer_url = ha_api_url + "/services/timer/load"
-
     response = requests.post(start_timer_url, headers=headers, json=data, timeout=100)
     if response:
         logger.info(  #  pylint: disable=W1203

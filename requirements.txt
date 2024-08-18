@@ -2,6 +2,8 @@ requests
 fastapi
 asyncio
 uvicorn
+pydantic
+pytimeparse2
 homeassistant_api
 numpy
 pandas

@@ -1,6 +1,7 @@
 """Tests for gilda-local."""
 
-from gilda_local.ha_sqlconn import HASQLConn, SQLConfig
+from gilda_local.ha_sqlconn import HASQLConn
+from gilda_local.sql_config import SQLConfig
 
 
 def test_local():
@@ -18,7 +19,7 @@ def test_local():
         [
             "sensor.electricity_maps_co2_intensity",
             "sensor.electricity_maps_co2_intensity",
-        ]
+        ],
     )
 
-    assert len(sh) == 24
+    assert len(sh) == 25
