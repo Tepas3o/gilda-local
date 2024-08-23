@@ -1,0 +1,140 @@
+blueprint:
+  name: Gilda Deferred Load Request Automation
+  description: Implements a deferred load appliance operation
+  domain: automation
+  author: Marcelo Matus
+
+  input:
+    deferred_load_section:
+      name: Deferred Load Section
+      description: Deferred Load Parameters
+      input:
+        deferred_load:
+          name: Load
+          description: Deferred expected load [KW]
+          default: 1
+          selector:
+            number:
+
+        deferred_time_horizon:
+          name: Time Horizon
+          description: Time Horizon to turn-on the deferred load
+          default:
+            hours: 24
+          selector:
+            duration:
+
+        deferred_sample_frequency:
+          name: Sample Frequency
+          description: Sample Frequency to program the deferred load
+          default:
+            minutes: 15
+          selector:
+            duration:
+
+        deferred_start_sensor:
+          name: Deferred Start Sensor
+          description: This sensor detects when a deferred start has been requested
+          selector:
+            entity:
+              filter:
+                - domain: binary_sensor
+
+        deferred_initial_time_sensor:
+          name: Deferred on-period Sensor
+          description: This sensor detects how long the entity is expected to be turned on
+          default: sensor.lavadora_de_carga_frontal_initial_time
+          selector:
+            entity:
+              filter:
+                - domain: sensor
+
+        deferred_timer:
+          name: Deferred Timer
+          description: This timer is used to trigger the deferred start
+          default: timer.gilda_remote_start_timer
+          selector:
+            entity:
+              filter:
+                - domain: timer
+
+        deferred_start_button:
+          name: Deferred Start Button
+          description: This button actually start the deferred load
+          default: button.lavadora_de_carga_frontal_remote_start
+          selector:
+            entity:
+              filter:
+                - domain: button
+
+
+    sql_section:
+      name: SQL Section
+      description: SQL database connection parameters
+      input:
+        sql_user:
+          name: SQL Password
+          default: homeassistant
+        sql_password:
+          name: SQL Password
+        sql_host:
+          name: SQL Host
+          default: homeassistant.local
+        sql_database:
+          name: SQL database
+          default: homeassistant
+        sql_port:
+          name: SQL port
+          default: 3306
+          selector:
+            number:
+
+    gilda_opts_section:
+      name: Gilda Opts Section
+      description: Gilda Opts connection parameters
+      input:
+        gilda_opts_host:
+          name: Gilda Opts Host
+          default: homeassistant.local
+        gilda_opts_port:
+          name: Gilda Opts Port
+          default: 8012
+          selector:
+            number:
+
+    co2_section:
+      name: CO2 Emissions Section
+      description: CO2 Emissions Parameters
+      input:
+        co2_intensity_entity:
+          name: CO2 Intensity Sensor
+          default: sensor.electricity_maps_co2_intensity
+
+        co2_cost:
+          name: CO2 Cost
+          description: CO2 Cost [$/gr CO2]
+          default: 10
+          selector:
+            number:
+
+variables:
+  deferred_start_sensor: !input deferred_start_sensor
+  deferred_initial_time_sensor: !input deferred_initial_time_sensor
+  deferred_time_horizon: !input deferred_time_horizon
+  deferred_sample_frequency: !input deferred_sample_frequency
+  on_period: "{{ states(deferred_initial_time_sensor).split(':')[1] }}"
+
+trigger:
+  - platform: template
+    value_template: "{{ states[deferred_start_sensor] == 'on' or states['input_boolean.dummy_remote_on'] == 'on' }}"
+action:
+  - delay: 0:00:05
+  - action: "pyscript.gilda_deferred_load_request"
+    metadata: {}
+    data:
+      load: !input deferred_load
+      on_period: "{{ on_period }}"
+      deferred_start_sensor: deferred_start_sensor
+
+
+

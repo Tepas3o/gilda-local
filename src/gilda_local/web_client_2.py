@@ -13,7 +13,7 @@ base_url = os.environ.get("API_URL", API_URL)
 
 headers = {"Authorization": "Bearer " + API_TOKEN}
 
-data = {"entity_id": "timer.gilda_remote_start_timer", "duration": "0:01:23"}
+data = {"entity_id": "timer.gilda_remote_start_timer", "duration": "0:02:28"}
 
 response = requests.post(base_url, headers=headers, json=data, timeout=100)
 

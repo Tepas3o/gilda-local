@@ -1,7 +1,7 @@
 """DeferredLoadRequest ."""
 
 from datetime import timedelta
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from gilda_local.sql_config import SQLConfig
 
@@ -14,10 +14,13 @@ class DeferredLoadRequest(BaseModel):
     on_period: timedelta | str = "0:00:00"
 
     timer_entity: str = ""
-    timer_api_url: str = ""
-    timer_api_token: str = ""
 
-    sql_config: SQLConfig = Field(default_factory=SQLConfig)
+    sql_config: SQLConfig | None = None
+    sql_user: str = "homeassistant"
+    sql_password: str = ""
+    sql_host: str = "homeassistant.local"
+    sql_database: str = "homeassistant"
+    sql_port: int = 3306
 
     gilda_opts_host: str = "homeassistant.local"
     gilda_opts_port: int = "5012"

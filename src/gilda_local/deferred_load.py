@@ -12,6 +12,7 @@ from gilda_local.ha_sqlconn import HASQLConn
 
 
 def as_hours(dt):
+    """Convert a timedelta or str to hours."""
     return (dt.total_seconds() if isinstance(dt, timedelta) else timeparse(dt)) / 3600.0
 
 
@@ -33,7 +34,7 @@ class DeferredLoad:
     ):
         """Create a TSSA system to optimize."""
 
-        if block_duration <= 0:
+        if block_duration < 0:
             return None
 
         on_period = as_hours(deferred_load_request.on_period)
@@ -75,8 +76,9 @@ class DeferredLoad:
         return system
 
     def get_emission_factor_forecast(self):
+        """Get the emission factor forecast."""
         #
-        # Get the co2 forecast
+        # Get the forecasts
         #
         co2_entity = self.deferred_load_request.co2_intensity_entity
 
@@ -99,6 +101,7 @@ class DeferredLoad:
         return emission_factor_history
 
     def get_tssa_system(self):
+        """Get tssa system."""
         emission_factor_forecast = self.get_emission_factor_forecast()
 
         return DeferredLoad.create_tssa_system(

@@ -1,23 +1,19 @@
 """Web server module for Gilda_local."""
 
-import os
 import asyncio
 import logging
+import os
+from datetime import timedelta
 
-import uvicorn
-from fastapi import FastAPI, BackgroundTasks
 import requests
+import uvicorn
+from fastapi import BackgroundTasks, FastAPI
 
-from gilda_local.deferred_load import DeferredLoadRequest, DeferredLoad
+from gilda_local.deferred_load import DeferredLoad, DeferredLoadRequest
 
+ha_api_url = os.environ.get("SUPERVISOR_API", "http://supervisor/core/api")
+ha_api_token = os.environ.get("SUPERVISOR_TOKEN")
 
-HA_API_URL = "http://192.168.1.85:8123/api"
-HA_API_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiI2NGZlZjIzYTAzNmQ0YTJhOGI2NDNmYzY3MTU2OGMyNyIsImlhdCI6MTcyMjQwMzc2MCwiZXhwIjoyMDM3NzYzNzYwfQ.PF--9gieQrCSrA150E58hvZiYNUcIKA3NVf9o76UF40"  # pylint: disable=C0301 # noqa
-
-ha_api_url = os.environ.get("HOMEASSISTANT_API", HA_API_URL)
-ha_api_token = os.environ.get("SUPERVISOR_TOKEN", HA_API_TOKEN)
-
-headers = {"Authorization": "Bearer " + ha_api_token}
 
 logger = logging.getLogger("uvicorn")
 
@@ -28,26 +24,29 @@ async def async_deferred_load_process(request: DeferredLoadRequest):
 
     # send data to gilda_opts
 
+    logger.info("async_deferred_load_request: %s", request)
+
     try:
         on_delay = DeferredLoad(request).get_on_delay()
-    except Exception as e:
-        logger.info(f"Error computing the on_delay {str(e)}")
-        on_delay = "0:00:00"
+    except Exception as e:  # pylint: disable=W0718
+        logger.info("Error computing the on_delay %s", e)
+        on_delay = timedelta(hours=0)
 
-    logger.info(f"Calculated on_delay of {on_delay}")
+    logger.info("Calculated on_delay of %s", on_delay)
 
+    start_timer_url = ha_api_url + "/services/timer/start"
+    headers = {"Authorization": "Bearer " + ha_api_token}
     data = {"entity_id": request.timer_entity, "duration": str(on_delay)}
-    start_timer_url = ha_api_url + "/services/timer/load"
+
+    logger.info("setting timer url: %s", start_timer_url)
+    logger.info("setting timer headers: %s", headers)
+    logger.info("calling timer data: %s", data)
+
     response = requests.post(start_timer_url, headers=headers, json=data, timeout=100)
     if response:
-        logger.info(  #  pylint: disable=W1203
-            f"gilda_local: successful load request for {data}"  # noqa
-        )
+        logger.info("gilda_local: successful load request for %s", data)
     else:
-        # noqa
-        logger.info(  #  pylint: disable=W1203
-            f"gilda_local: error response code {response.status_code}"  # noqa
-        )
+        logger.info("gilda_local: error response code %s", response.status_code)
 
 
 app = FastAPI()
@@ -55,9 +54,14 @@ app = FastAPI()
 
 @app.post("/deferred_load_request")
 async def deferred_load_request(
-    request: DeferredLoadRequest, background_tasks: BackgroundTasks
+    data: dict, background_tasks: BackgroundTasks
 ):
     """Deferred load process."""
+    logger.info("request dict: %s", data)
+
+    request = DeferredLoadRequest(**data)
+
+
     background_tasks.add_task(async_deferred_load_process, request)
 
     deferred_entity = request.deferred_entity
@@ -77,8 +81,12 @@ GILDALOCAL_PORT = 5024
 
 def run():
     """Run method."""
-    address = os.environ.get("GILDALOCAL_ADDR", GILDALOCAL_ADDR)
-    port = int(os.environ.get("PORT", GILDALOCAL_PORT))
+    if len(ha_api_token) == 0:
+        logger.error("gilda_local: unknown API Token, shutting down.")
+        return
+
+    address = os.environ.get("ADDRESS", GILDALOCAL_ADDR)
+    port = int(os.environ.get("PORT", f"{GILDALOCAL_PORT}"))
 
     uvicorn.run(app, host=address, port=port)
 
