@@ -5,6 +5,7 @@ import logging
 import os
 from datetime import timedelta
 
+import mariadb
 import requests
 import uvicorn
 from fastapi import BackgroundTasks, FastAPI
@@ -27,7 +28,11 @@ async def async_deferred_load_process(request: DeferredLoadRequest):
     logger.info("async_deferred_load_request: %s", request)
 
     try:
-        on_delay = DeferredLoad(request).get_on_delay()
+        deferred_load = DeferredLoad(request)
+        on_delay = deferred_load.get_on_delay()
+    except mariadb.Error as e:
+        logger.info("Error on mariadb %s", e)
+        on_delay = timedelta(hours=0)
     except Exception as e:  # pylint: disable=W0718
         logger.info("Error computing the on_delay %s", e)
         on_delay = timedelta(hours=0)

@@ -22,8 +22,8 @@ class DeferredLoad:
     def __init__(self, deferred_load_request: DeferredLoadRequest):
         """Initialize Deferred load."""
         self.deferred_load_request = deferred_load_request
-        self.ha_sqlconn = HASQLConn(deferred_load_request.get_sql_config())
         self.dt = as_hours(self.deferred_load_request.sample_frequency)
+        self.ha_sqlconn = HASQLConn(deferred_load_request.get_sql_config())
 
     @staticmethod
     def create_tssa_system(
