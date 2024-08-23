@@ -123,9 +123,7 @@ class HASQLConn:
 
         df = self.get_state_history(entity_ids[0], start_time, end_time, frequency)
         for entity_id in entity_ids[1:]:
-            df_e = self.get_state_history(
-                entity_id, start_time, end_time, frequency
-            )
+            df_e = self.get_state_history(entity_id, start_time, end_time, frequency)
             df = pd.merge(df, df_e, left_index=True, right_index=True, how="outer")
 
         return df

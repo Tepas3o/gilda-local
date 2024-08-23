@@ -4,8 +4,8 @@ import json
 from datetime import datetime, timedelta
 from typing import List
 
-from pytimeparse2 import parse as timeparse
 import requests
+from pytimeparse2 import parse as timeparse
 
 from gilda_local.deferred_load_request import DeferredLoadRequest
 from gilda_local.ha_sqlconn import HASQLConn
@@ -22,8 +22,7 @@ class DeferredLoad:
     def __init__(self, deferred_load_request: DeferredLoadRequest):
         """Initialize Deferred load."""
         self.deferred_load_request = deferred_load_request
-        self.ha_sqlconn = HASQLConn(deferred_load_request.sql_config)
-
+        self.ha_sqlconn = HASQLConn(deferred_load_request.get_sql_config())
         self.dt = as_hours(self.deferred_load_request.sample_frequency)
 
     @staticmethod

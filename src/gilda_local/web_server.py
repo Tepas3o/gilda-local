@@ -38,6 +38,10 @@ async def async_deferred_load_process(request: DeferredLoadRequest):
     headers = {"Authorization": "Bearer " + ha_api_token}
     data = {"entity_id": request.timer_entity, "duration": str(on_delay)}
 
+    if len(data['entity_id']) == 0:
+        logger.info("gilda_local: no timer entity to start %s", data)
+        return
+
     logger.info("setting timer url: %s", start_timer_url)
     logger.info("setting timer headers: %s", headers)
     logger.info("calling timer data: %s", data)

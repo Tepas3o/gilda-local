@@ -13,7 +13,7 @@ class DeferredLoadRequest(BaseModel):
     load: float = 0
     on_period: timedelta | str = "0:00:00"
 
-    timer_entity: str = ""
+    timer_entity: str = "timer.gilda_remote_start_timer"
 
     sql_config: SQLConfig | None = None
     sql_user: str = "homeassistant"
@@ -35,3 +35,17 @@ class DeferredLoadRequest(BaseModel):
 
     time_horizont: timedelta | str = "24:00:00"
     sample_frequency: timedelta | str = "0:15:00"
+
+    def get_sql_config(self):
+        """Return sql config."""
+        return (
+            self.sql_config
+            if self.sql_config is not None
+            else SQLConfig(
+                user=DeferredLoadRequest.sql_user,
+                password=DeferredLoadRequest.sql_password,
+                database=DeferredLoadRequest.sql_database,
+                host=DeferredLoadRequest.sql_host,
+                port=DeferredLoadRequest.sql_port,
+            )
+        )
