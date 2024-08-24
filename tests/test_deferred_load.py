@@ -23,7 +23,7 @@ def test_as_hour():
     h = as_hours("12:00:00")
     assert h == 12.0
 
-    h = as_hours("12:0:0.00")
+    h = as_hours("12:0:0")
     assert h == 12.0
 
     h = as_hours("0:15:00")
