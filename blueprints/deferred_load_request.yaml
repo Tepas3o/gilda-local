@@ -9,14 +9,15 @@ blueprint:
       name: Deferred Load Section
       description: Deferred Load Parameters
       input:
-        deferred_load:
+        load:
           name: Load
           description: Deferred expected load [KW]
           default: 1
           selector:
             number:
+              step: any
 
-        deferred_time_horizon:
+        time_horizon:
           name: Time Horizon
           description: Time Horizon to turn-on the deferred load
           default:
@@ -24,7 +25,7 @@ blueprint:
           selector:
             duration:
 
-        deferred_sample_frequency:
+        sample_frequency:
           name: Sample Frequency
           description: Sample Frequency to program the deferred load
           default:
@@ -32,24 +33,23 @@ blueprint:
           selector:
             duration:
 
-        deferred_start_sensor:
-          name: Deferred Start Sensor
-          description: This sensor detects when a deferred start has been requested
+        co2_cost:
+          name: CO2 Cost
+          description: CO2 Cost [$/Kg CO2]
+          default: 10
           selector:
-            entity:
-              filter:
-                - domain: binary_sensor
+            number:
+              step: any
 
-        deferred_initial_time_sensor:
-          name: Deferred on-period Sensor
-          description: This sensor detects how long the entity is expected to be turned on
-          default: sensor.lavadora_de_carga_frontal_initial_time
+        kwh_cost:
+          name: KWH Cost
+          description: KWH Cost [$/KWH]
+          default: 150
           selector:
-            entity:
-              filter:
-                - domain: sensor
+            number:
+              step: any
 
-        deferred_timer:
+        timer_entity:
           name: Deferred Timer
           description: This timer is used to trigger the deferred start
           default: timer.gilda_remote_start_timer
@@ -58,7 +58,32 @@ blueprint:
               filter:
                 - domain: timer
 
-        deferred_start_button:
+        co2_intensity_entity:
+          name: CO2 Intensity Sensor
+          default: sensor.electricity_maps_co2_intensity
+
+    entity_sensors_section:
+      name: Entity Sensors
+      description: Allow to monitor and control the entity
+      input:
+        start_sensor:
+          name: Deferred Start Sensor
+          description: This sensor detects when a deferred start has been requested
+          selector:
+            entity:
+              filter:
+                - domain: binary_sensor
+
+        initial_time_sensor:
+          name: Deferred on-period Sensor
+          description: This sensor detects how long the entity is expected to be turned on
+          default: sensor.lavadora_de_carga_frontal_initial_time
+          selector:
+            entity:
+              filter:
+                - domain: sensor
+
+        start_button:
           name: Deferred Start Button
           description: This button actually start the deferred load
           default: button.lavadora_de_carga_frontal_remote_start
@@ -67,6 +92,18 @@ blueprint:
               filter:
                 - domain: button
 
+    gilda_opts_section:
+      name: Gilda Opts Section
+      description: Gilda Opts connection parameters
+      input:
+        gilda_opts_host:
+          name: Gilda Opts Host
+          default: homeassistant.local
+        gilda_opts_port:
+          name: Gilda Opts Port
+          default: 5012
+          selector:
+            number:
 
     sql_section:
       name: SQL Section
@@ -89,52 +126,48 @@ blueprint:
           selector:
             number:
 
-    gilda_opts_section:
-      name: Gilda Opts Section
-      description: Gilda Opts connection parameters
-      input:
-        gilda_opts_host:
-          name: Gilda Opts Host
-          default: homeassistant.local
-        gilda_opts_port:
-          name: Gilda Opts Port
-          default: 8012
-          selector:
-            number:
-
-    co2_section:
-      name: CO2 Emissions Section
-      description: CO2 Emissions Parameters
-      input:
-        co2_intensity_entity:
-          name: CO2 Intensity Sensor
-          default: sensor.electricity_maps_co2_intensity
-
-        co2_cost:
-          name: CO2 Cost
-          description: CO2 Cost [$/gr CO2]
-          default: 10
-          selector:
-            number:
 
 variables:
-  deferred_start_sensor: !input deferred_start_sensor
-  deferred_initial_time_sensor: !input deferred_initial_time_sensor
-  deferred_time_horizon: !input deferred_time_horizon
-  deferred_sample_frequency: !input deferred_sample_frequency
-  on_period: "{{ states(deferred_initial_time_sensor).split(':')[1] }}"
+  start_sensor: !input start_sensor
+  initial_time_sensor: !input initial_time_sensor
+
+  time_horizon_i: !input time_horizon
+  sample_frequency_i: !input sample_frequency
+
+  on_period: "{{ states(initial_time_sensor) }}"
+  time_horizon: "{{ time_horizon_i['hours'] ~ ':' ~ time_horizon_i['minutes'] ~ ':00' }}"
+  sample_frequency: "{{ sample_frequency_i['hours'] ~ ':' ~ sample_frequency_i['minutes'] ~ ':00' }}"
 
 trigger:
-  - platform: template
-    value_template: "{{ states[deferred_start_sensor] == 'on' or states['input_boolean.dummy_remote_on'] == 'on' }}"
+  - platform: state
+    entity_id:
+      - !input start_sensor
+      - input_boolean.dummy_remote_on
+    to: "on"
+
+condition: "{{ is_state(start_sensor,'on') or is_state('input_boolean.dummy_remote_on', 'on') }}"
+
 action:
   - delay: 0:00:05
   - action: "pyscript.gilda_deferred_load_request"
     metadata: {}
     data:
-      load: !input deferred_load
+      load: !input load
       on_period: "{{ on_period }}"
-      deferred_start_sensor: deferred_start_sensor
+      time_horizon: "{{ time_horizon }}"
+      sample_frequency: "{{ sample_frequency }}"
+      co2_cost: !input co2_cost
+      kwh_cost: !input kwh_cost
 
+      timer_entity: !input timer_entity
+      co2_intensity_entity: !input co2_intensity_entity
 
+      gilda_opts_host: !input gilda_opts_host
+      gilda_opts_port: !input gilda_opts_port
+
+      sql_user: !input sql_user
+      sql_password: !input sql_password
+      sql_host: !input sql_host
+      sql_database: !input sql_database
+      sql_port: !input sql_port
 

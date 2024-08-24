@@ -2,8 +2,32 @@
 
 import json
 from gilda_local.deferred_load_request import DeferredLoadRequest
-from gilda_local.deferred_load import DeferredLoad
+from gilda_local.deferred_load import DeferredLoad, as_hours
 from gilda_local.sql_config import SQLConfig
+
+
+def test_as_hour():
+
+    h = as_hours("1d")
+    assert h == 24.0
+
+    h = as_hours("12h")
+    assert h == 12.0
+
+    h = as_hours("12:0:0")
+    assert h == 12.0
+
+    h = as_hours("12:0:00")
+    assert h == 12.0
+
+    h = as_hours("12:00:00")
+    assert h == 12.0
+
+    h = as_hours("12:0:0.00")
+    assert h == 12.0
+
+    h = as_hours("0:15:00")
+    assert h == 0.25
 
 
 def test_deferred_load_request():
@@ -15,6 +39,8 @@ def test_deferred_load_request():
     dlr2 = DeferredLoadRequest()
 
     assert dlr2.on_period == "0:00:00"
+
+
 
 
 def test_deferred_load():

@@ -9,11 +9,18 @@ from gilda_local.sql_config import SQLConfig
 class DeferredLoadRequest(BaseModel):
     """Deferred load request message."""
 
-    deferred_entity: str = ""
     load: float | str = 0
     on_period: timedelta | str = "0:00:00"
+    time_horizon: timedelta | str = "24:00:00"
+    sample_frequency: timedelta | str = "0:15:00"
+    co2_cost: float | str = 50 # CO2 cost [$ / gr CO2]
+    kwh_cost: float | str= 150 # KWh cost [$ / KWh]
 
     timer_entity: str = "timer.gilda_remote_start_timer"
+    co2_intensity_entity: str = "sensor.electricity_maps_co2_intensity"
+
+    gilda_opts_host: str = "homeassistant.local"
+    gilda_opts_port: int | str = 5012
 
     sql_config: SQLConfig | None = None
     sql_user: str = "homeassistant"
@@ -22,19 +29,6 @@ class DeferredLoadRequest(BaseModel):
     sql_database: str = "homeassistant"
     sql_port: int | str = 3306
 
-    gilda_opts_host: str = "homeassistant.local"
-    gilda_opts_port: int | str = 5012
-
-    co2_intensity_entity: str = "sensor.electricity_maps_co2_intensity"
-
-    # CO2 cost [$ / gr CO2]
-    co2_cost: float | str = 50
-
-    # KWh cost [$ / KWh]
-    kwh_cost: float | str= 150
-
-    time_horizon: timedelta | str = "24:00:00"
-    sample_frequency: timedelta | str = "0:15:00"
 
     def get_sql_config(self):
         """Return sql config."""
