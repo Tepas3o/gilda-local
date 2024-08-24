@@ -42,10 +42,10 @@ class DeferredLoadRequest(BaseModel):
             self.sql_config
             if self.sql_config is not None
             else SQLConfig(
-                user=DeferredLoadRequest.sql_user,
-                password=DeferredLoadRequest.sql_password,
-                database=DeferredLoadRequest.sql_database,
-                host=DeferredLoadRequest.sql_host,
-                port=DeferredLoadRequest.sql_port,
+                user=self.sql_user,
+                password=self.sql_password,
+                database=self.sql_database,
+                host=self.sql_host,
+                port=int(self.sql_port),
             )
         )
