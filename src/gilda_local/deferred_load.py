@@ -1,9 +1,12 @@
 """Deferred load module."""
 
 import json
+import logging
 from datetime import datetime, timedelta
 from typing import List
+from math import ceil
 
+import mariadb
 import requests
 from pytimeparse2 import parse as timeparse
 
@@ -19,11 +22,22 @@ def as_hours(dt):
 class DeferredLoad:
     """Deferred load class."""
 
-    def __init__(self, deferred_load_request: DeferredLoadRequest):
+    def __init__(self, deferred_load_request: DeferredLoadRequest, logger=None):
         """Initialize Deferred load."""
         self.deferred_load_request = deferred_load_request
         self.dt = as_hours(self.deferred_load_request.sample_frequency)
-        self.ha_sqlconn = HASQLConn(deferred_load_request.get_sql_config())
+        sql_config = deferred_load_request.get_sql_config()
+
+        self.logger = (
+            logger if logger is not None else logging.getLogger("deferred_load")
+        )
+
+        self.logger.info("Connection to SQL using config %s", sql_config)
+        try:
+            self.ha_sqlconn = HASQLConn(sql_config)
+        except mariadb.Error as e:
+            self.logger.error("deferred_load: can't connect to the mariadb %s", e)
+            self.ha_sqlconn = None
 
     @staticmethod
     def create_tssa_system(
@@ -33,7 +47,7 @@ class DeferredLoad:
     ):
         """Create a TSSA system to optimize."""
 
-        if block_duration < 0:
+        if block_duration <= 0:
             return None
 
         on_period = as_hours(deferred_load_request.on_period)
@@ -42,7 +56,7 @@ class DeferredLoad:
 
         n = len(emission_factor_forecast)
         if n == 0:
-            return None
+            n = int(on_period / block_duration)
 
         system = {}
         system["name"] = "deferred_load"
@@ -79,25 +93,31 @@ class DeferredLoad:
         #
         # Get the forecasts
         #
+
+        # retrieve the needed history days
+        time_horizon = as_hours(self.deferred_load_request.time_horizon)
+        history_days = ceil(time_horizon / 24.0)
+
+        now = datetime.now().replace(microsecond=0)
+        start_time = now - timedelta(days=history_days)
+        end_time = start_time + timedelta(hours=time_horizon)
+
         co2_entity = self.deferred_load_request.co2_intensity_entity
-
-        # retrieve one day of history
-
-        end_time = datetime.now().replace(microsecond=0)
-        start_time = end_time - timedelta(
-            hours=as_hours(self.deferred_load_request.time_horizont)
+        co2_intensity_history = (
+            self.ha_sqlconn.get_state_history(
+                co2_entity,
+                start_time=start_time,
+                end_time=end_time,
+                frequency=f"{self.dt}h",
+            )[co2_entity].to_list()
+            if self.ha_sqlconn is not None
+            else []
         )
 
-        co2_intensity_history = self.ha_sqlconn.get_state_history(
-            co2_entity,
-            start_time=start_time,
-            end_time=end_time,
-            frequency=f"{self.dt}h",
-        )
+        # do persistence
+        emission_factor_forecast = co2_intensity_history
 
-        emission_factor_history = co2_intensity_history[co2_entity].to_list()
-
-        return emission_factor_history
+        return emission_factor_forecast
 
     def get_tssa_system(self):
         """Get tssa system."""

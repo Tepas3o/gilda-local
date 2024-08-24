@@ -33,7 +33,7 @@ class DeferredLoadRequest(BaseModel):
     # KWh cost [$ / KWh]
     kwh_cost: float = 150
 
-    time_horizont: timedelta | str = "24:00:00"
+    time_horizon: timedelta | str = "24:00:00"
     sample_frequency: timedelta | str = "0:15:00"
 
     def get_sql_config(self):

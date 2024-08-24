@@ -28,7 +28,7 @@ async def async_deferred_load_process(request: DeferredLoadRequest):
     logger.info("async_deferred_load_request: %s", request)
 
     try:
-        deferred_load = DeferredLoad(request)
+        deferred_load = DeferredLoad(request, logger)
         on_delay = deferred_load.get_on_delay()
     except mariadb.Error as e:
         logger.info("Error on mariadb %s", e)
