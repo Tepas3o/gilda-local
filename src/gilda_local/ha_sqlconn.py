@@ -18,7 +18,7 @@ class HASQLConn:
             user=config.user,
             password=config.password,
             host=config.host,
-            port=config.port,
+            port=int(config.port),
             database=config.database,
         )
 

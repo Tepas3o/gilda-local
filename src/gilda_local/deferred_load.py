@@ -15,8 +15,12 @@ from gilda_local.ha_sqlconn import HASQLConn
 
 
 def as_hours(dt):
-    """Convert a timedelta or str to hours."""
-    return (dt.total_seconds() if isinstance(dt, timedelta) else timeparse(dt)) / 3600.0
+    """Convert a timedelta, seconds or str to hours."""
+    return (
+        dt.total_seconds()
+        if isinstance(dt, timedelta)
+        else (dt if isinstance(dt, (float, int)) else timeparse(str(dt)))
+    ) / 3600.0
 
 
 class DeferredLoad:
@@ -72,9 +76,9 @@ class DeferredLoad:
         grid["name"] = "grid"
         grid["uid"] = 1
         grid["bus_uid"] = 1
-        grid["capacity"] = deferred_load_request.load
-        grid["energy_buy_price_sched"] = deferred_load_request.kwh_cost
-        grid["emission_cost"] = deferred_load_request.co2_cost
+        grid["capacity"] = float(deferred_load_request.load)
+        grid["energy_buy_price_sched"] = float(deferred_load_request.kwh_cost)
+        grid["emission_cost"] = float(deferred_load_request.co2_cost)
         grid["emission_factor_sched"] = emission_factor_forecast
         system["grids"] = [grid]
 
@@ -82,7 +86,7 @@ class DeferredLoad:
         tssa["name"] = deferred_load_request.deferred_entity
         tssa["uid"] = 1
         tssa["bus_uid"] = 1
-        tssa["load"] = deferred_load_request.load
+        tssa["load"] = float(deferred_load_request.load)
         tssa["on_period"] = on_period
         system["tssas"] = [tssa]
 
@@ -144,7 +148,7 @@ class DeferredLoad:
         #
         headers = {"Content-Type": "application/json"}
         host = self.deferred_load_request.gilda_opts_host
-        port = self.deferred_load_request.gilda_opts_port
+        port = int(self.deferred_load_request.gilda_opts_port)
         url = f"http://{host}:{port}/optimize"
 
         response = requests.post(url, headers=headers, json=system, timeout=100)

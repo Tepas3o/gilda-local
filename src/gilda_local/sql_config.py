@@ -10,4 +10,4 @@ class SQLConfig(BaseModel):
     password: str = ""
     host: str = "homeassistant.local"
     database: str = "homeassistant"
-    port: int = 3306
+    port: int | str = 3306
