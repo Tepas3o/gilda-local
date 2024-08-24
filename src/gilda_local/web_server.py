@@ -69,18 +69,17 @@ app = FastAPI()
 @app.post("/deferred_load_request")
 async def deferred_load_request(data: dict, background_tasks: BackgroundTasks):
     """Deferred load process."""
-    logger.info("deferred_load_process: request dict: %s", data)
+    logger.info("deferred_load_process: request dict %s", data)
 
     request = DeferredLoadRequest(**data)
 
     background_tasks.add_task(async_deferred_load_process, request)
 
-    deferred_entity = request.deferred_entity
     timer_entity = request.timer_entity
     on_period = request.on_period
 
     return {
-        "message": f"Deferred load {deferred_entity} on {on_period} and {timer_entity}"
+        "message": f"Deferred load on {on_period} and {timer_entity}"
     }
 
 
