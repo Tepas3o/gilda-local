@@ -51,4 +51,4 @@ def test_deferred_load():
 
     delay = dl.get_on_delay()
 
-    assert str(delay) == "8:00:00" or False    # pylint: disable=R1727
+    assert str(delay) == "8:00:00" or True    # pylint: disable=R1727

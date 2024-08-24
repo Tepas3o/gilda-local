@@ -1,9 +1,9 @@
 """Deferred load module."""
 
+from typing import Dict, Any, List
 import json
-import logging
+from logging import Logger, getLogger
 from datetime import datetime, timedelta
-from typing import List
 from math import ceil
 
 import mariadb
@@ -33,12 +33,12 @@ class DeferredLoad:
         sql_config = deferred_load_request.get_sql_config()
 
         self.logger = (
-            logger if logger is not None else logging.getLogger("deferred_load")
+            logger if logger is not None else getLogger("deferred_load")
         )
 
-        self.logger.info("Connection to SQL using config %s", sql_config)
+        self.logger.info("deferred_load: connection to SQL using config %s", sql_config)
         try:
-            self.ha_sqlconn = HASQLConn(sql_config)
+            self.ha_sqlconn : HASQLConn | None = HASQLConn(sql_config)
         except mariadb.Error as e:
             self.logger.error("deferred_load: can't connect to the mariadb %s", e)
             self.ha_sqlconn = None
@@ -47,32 +47,34 @@ class DeferredLoad:
     def create_tssa_system(
         deferred_load_request: DeferredLoadRequest,
         emission_factor_forecast: List[float],
-        block_duration: float,
+        block_duration: float
     ):
         """Create a TSSA system to optimize."""
 
         if block_duration <= 0:
-            return None
+            raise Exception("invalid block_duration %s" % block_duration)
 
         on_period = as_hours(deferred_load_request.on_period)
         if on_period <= 0:
-            return None
+            raise Exception("invalid on_period %s" % on_period)
+
 
         n = len(emission_factor_forecast)
         if n == 0:
             n = int(on_period / block_duration)
 
-        system = {}
+        system : Dict[str, Any] = {}
+
         system["name"] = "deferred_load"
         system["uid"] = 1
         system["block_durations"] = [block_duration] * n
 
-        bus = {}
+        bus : Dict[str, Any] = {}
         bus["name"] = "bus"
         bus["uid"] = 1
         system["buses"] = [bus]
 
-        grid = {}
+        grid : Dict[str, Any] = {}
         grid["name"] = "grid"
         grid["uid"] = 1
         grid["bus_uid"] = 1
@@ -82,7 +84,7 @@ class DeferredLoad:
         grid["emission_factor_sched"] = emission_factor_forecast
         system["grids"] = [grid]
 
-        tssa = {}
+        tssa : Dict[str, Any] = {}
         tssa["name"] = deferred_load_request.deferred_entity
         tssa["uid"] = 1
         tssa["bus_uid"] = 1
@@ -139,9 +141,13 @@ class DeferredLoad:
         # create the system
         #
 
-        system = self.get_tssa_system()
-        if system is None:
+        try:
+            system = self.get_tssa_system()
+        except Exception as e:
+            self.logger.error("get_on_delay: no system available %s", e)
             return timedelta(hours=0)
+
+        self.logger.info("get_on_delay: system  %s", system)
 
         #
         # Optimize the system remotely
