@@ -75,12 +75,10 @@ async def deferred_load_request(data: dict, background_tasks: BackgroundTasks):
 
     background_tasks.add_task(async_deferred_load_process, request)
 
-    timer_entity = request.timer_entity
-    on_period = request.on_period
-
     return {
-        "message": f"Deferred load on {on_period} and {timer_entity}"
+        "message": "Deferred load requested"
     }
+
 
 
 # Gilda default port
