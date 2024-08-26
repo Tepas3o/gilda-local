@@ -132,14 +132,18 @@ blueprint:
           selector:
             number:
 
+
 variables:
   load: !input load
   co2_cost: !input co2_cost
   kwh_cost: !input kwh_cost
-
   initial_time_sensor: !input initial_time_sensor
-  th_i: !input time_horizon
-  sf_i: !input sample_frequency
+
+trigger_variables:
+  th: !input time_horizon
+  time_horizon: "{{ (th.hours if 'hours' in th.keys() else '0') ~ ':' ~ (th.minutes if 'minutes' in th.keys() else '00') ~ ':00' }}"
+  sf: !input sample_frequency
+  sample_frequency: "{{ (sf.hours if 'hours' in sf.keys() else '0') ~ ':' ~ (sf.minutes if 'minutes' in sf.keys() else '00') ~ ':00' }}"
 
 trigger:
   - platform: state
@@ -151,7 +155,7 @@ trigger:
   - platform: event
     event_type: timer.finished
     event_data:
-      entity_id: timer_entity
+      entity_id: !input timer_entity
     id: timer_finished
 
 action:
@@ -164,8 +168,8 @@ action:
             data:
               load: "{{ load | float / 1000.0}}"
               on_period: "{{ states(initial_time_sensor) }}"
-              time_horizon: "{{ th_i['hours'] ~ ':' ~ th_i['minutes'] ~ ':00' }}"
-              sample_frequency: "{{ sf_i['hours'] ~ ':' ~ sf_i['minutes'] ~ ':00' }}"
+              time_horizon: "{{ time_horizon }}"
+              sample_frequency: "{{ sample_frequency }}"
               co2_cost: "{{ co2_cost | float }}"
               kwh_cost: "{{ kwh_cost | float }}"
               co2_intensity_entity: !input co2_intensity_entity
