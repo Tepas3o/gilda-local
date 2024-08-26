@@ -2,7 +2,7 @@
 
 from typing import Dict, Any, List
 import json
-from logging import Logger, getLogger
+from logging import getLogger
 from datetime import datetime, timedelta
 from math import ceil
 
@@ -58,13 +58,12 @@ class DeferredLoad:
         block_duration: float,
     ):
         """Create a TSSA system to optimize."""
-
         if block_duration <= 0:
-            raise Exception("invalid block_duration %s" % block_duration)
+            raise ValueError(f"invalid block_duration {block_duration}")
 
         on_period = as_hours(deferred_load_request.on_period)
         if on_period <= 0:
-            raise Exception("invalid on_period %s" % on_period)
+            raise ValueError(f"invalid on_period {on_period}")
 
         n = len(emission_factor_forecast)
         if n == 0:
@@ -150,7 +149,7 @@ class DeferredLoad:
 
         try:
             system = self.get_tssa_system()
-        except Exception as e:
+        except Exception as e:  # pylint: disable=W0718
             self.logger.error("get_on_delay: no system available: %s", e)
             return timedelta(hours=0)
 
@@ -160,7 +159,7 @@ class DeferredLoad:
         # Optimize the system remotely
         #
         headers = {"Content-Type": "application/json"}
-        host = self.deferred_load_request.gilda_opts_host
+        host = self.deferred_load_request.gilda_host
         port = int(self.deferred_load_request.gilda_opts_port)
         url = f"http://{host}:{port}/optimize"
 

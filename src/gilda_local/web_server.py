@@ -54,7 +54,8 @@ async def async_deferred_load_process(request: DeferredLoadRequest):
     response = requests.post(start_timer_url, headers=headers, json=data, timeout=100)
     if response:
         logger.info(
-            "async_deferred_load_process: : successful load request for %s", data
+            "async_deferred_load_process: : successful load request for %s",
+            data,
         )
     else:
         logger.error(
@@ -75,10 +76,7 @@ async def deferred_load_request(data: dict, background_tasks: BackgroundTasks):
 
     background_tasks.add_task(async_deferred_load_process, request)
 
-    return {
-        "message": "Deferred load requested"
-    }
-
+    return {"message": "Deferred load requested"}
 
 
 # Gilda default port

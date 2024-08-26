@@ -69,7 +69,7 @@ blueprint:
       input:
         start_sensor:
           name: Deferred Start Sensor
-          description: This sensor detects when a deferred start has been requested
+          description: This sensor detects a deferred start request
           selector:
             entity:
               filter:
@@ -77,7 +77,7 @@ blueprint:
 
         initial_time_sensor:
           name: Deferred on-period Sensor
-          description: This sensor detects how long the entity is expected to be turned on
+          description: Detects how long the entity is expected to be on
           default: sensor.lavadora_de_carga_frontal_initial_time
           selector:
             entity:
@@ -93,13 +93,18 @@ blueprint:
               filter:
                 - domain: button
 
-    gilda_opts_section:
-      name: Gilda Opts Section
-      description: Gilda Opts connection parameters
+    gilda_section:
+      name: Gilda Section
+      description: Gilda connection parameters
       input:
-        gilda_opts_host:
-          name: Gilda Opts Host
+        gilda_host:
+          name: Gilda Host
           default: homeassistant.local
+        gilda_local_port:
+          name: Gilda Opts Port
+          default: 5024
+          selector:
+            number:
         gilda_opts_port:
           name: Gilda Opts Port
           default: 5012
@@ -150,39 +155,39 @@ trigger:
     id: timer_finished
 
 action:
-- choose:
-    - conditions:
-        - condition: trigger
-          id: deferred_start
-      sequence:
-        - action: "pyscript.gilda_deferred_load_request"
-          data:
-            load: "{{ load | float / 1000.0}}"
-            on_period: "{{ states(initial_time_sensor) }}"
-            time_horizon: "{{ th_i['hours'] ~ ':' ~ th_i['minutes'] ~ ':00' }}"
-            sample_frequency: "{{ sf_i['hours'] ~ ':' ~ sf_i['minutes'] ~ ':00' }}"
-            co2_cost: "{{ co2_cost | float }}"
-            kwh_cost: "{{ kwh_cost | float }}"
-            co2_intensity_entity: !input co2_intensity_entity
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: deferred_start
+        sequence:
+          - action: "pyscript.gilda_deferred_load_request"
+            data:
+              load: "{{ load | float / 1000.0}}"
+              on_period: "{{ states(initial_time_sensor) }}"
+              time_horizon: "{{ th_i['hours'] ~ ':' ~ th_i['minutes'] ~ ':00' }}"
+              sample_frequency: "{{ sf_i['hours'] ~ ':' ~ sf_i['minutes'] ~ ':00' }}"
+              co2_cost: "{{ co2_cost | float }}"
+              kwh_cost: "{{ kwh_cost | float }}"
+              co2_intensity_entity: !input co2_intensity_entity
 
-            timer_entity: !input timer_entity
+              timer_entity: !input timer_entity
 
-            gilda_opts_host: !input gilda_opts_host
-            gilda_opts_port: !input gilda_opts_port
+              gilda_host: !input gilda_host
+              gilda_opts_port: !input gilda_opts_port
+              gilda_local_port: !input gilda_local_port
 
-            sql_user: !input sql_user
-            sql_password: !input sql_password
-            sql_host: !input sql_host
-            sql_database: !input sql_database
-            sql_port: !input sql_port
+              sql_user: !input sql_user
+              sql_password: !input sql_password
+              sql_host: !input sql_host
+              sql_database: !input sql_database
+              sql_port: !input sql_port
 
-    - conditions:
-        - condition: trigger
-          id: timer_finished
-      sequence:
-        - action: button.press
-          target:
-            entity_id: !input start_button
+      - conditions:
+          - condition: trigger
+            id: timer_finished
+        sequence:
+          - action: button.press
+            target:
+              entity_id: !input start_button
 
-
-mode: parallel
+mode: single
