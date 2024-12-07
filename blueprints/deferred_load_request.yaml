@@ -116,7 +116,7 @@ blueprint:
       description: SQL database connection parameters
       input:
         sql_user:
-          name: SQL Password
+          name: SQL User
           default: homeassistant
         sql_password:
           name: SQL Password
@@ -124,10 +124,10 @@ blueprint:
           name: SQL Host
           default: homeassistant.local
         sql_database:
-          name: SQL database
+          name: SQL Database
           default: homeassistant
         sql_port:
-          name: SQL port
+          name: SQL Port
           default: 3306
           selector:
             number:
