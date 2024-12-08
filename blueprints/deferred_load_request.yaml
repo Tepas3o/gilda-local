@@ -1,6 +1,6 @@
 blueprint:
   name: Gilda Deferred Load Request Automation
-  description: Implements a deferred load appliance operation
+  description: Implements a deferred load appliance operation, mainly for a LG washing machine and its remote play feature.
   domain: automation
   author: Marcelo Matus
 
