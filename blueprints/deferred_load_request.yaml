@@ -11,10 +11,14 @@ blueprint:
       input:
         load:
           name: Load
-          description: Deferred expected load [W]
+          description: Deferred expected load
           default: 1000.0
           selector:
             number:
+              min: 0
+              max: 10000
+              unit_of_measurement: "W"
+              mode: box
 
         time_horizon:
           name: Time Horizon
@@ -33,22 +37,36 @@ blueprint:
             duration:
 
         co2_cost:
-          name: CO2 Cost
-          description: CO2 Cost [$/Kg CO2]
+          name: Emission Cost
+          description: Emission Cost
           default: 10.0
           selector:
             number:
+              min: 0
+              max: 1000
+              step: any
+              unit_of_measurement: "$/Kg CO2"
+              mode: box
 
         kwh_cost:
-          name: KWH Cost
-          description: KWH Cost [$/KWH]
+          name: Energy Cost
+          description: Energy Cost
           default: 150.0
           selector:
             number:
+              min: 0
+              max: 1000
+              step: any
+              unit_of_measurement: "$/KWh"
+              mode: box
 
         co2_intensity_entity:
           name: CO2 Intensity Sensor
           default: sensor.electricity_maps_co2_intensity
+          selector:
+            entity:
+              filter:
+                - domain: sensor
 
     timer_entity_section:
       name: Timer Entity
@@ -84,6 +102,15 @@ blueprint:
               filter:
                 - domain: sensor
 
+        wakeup_switch:
+          name: Wakeup switch
+          description: This switch will wakeup the entity
+          default: switch.lavadora_de_carga_frontal_power
+          selector:
+            entity:
+              filter:
+                - domain: switch
+
         start_button:
           name: Deferred Start Button
           description: This button actually start the deferred load
@@ -105,11 +132,18 @@ blueprint:
           default: 5024
           selector:
             number:
+              min: 0
+              max: 64000
+              mode: box
+
         gilda_opts_port:
           name: Gilda Opts Port
           default: 5012
           selector:
             number:
+              min: 0
+              max: 64000
+              mode: box
 
     sql_section:
       name: SQL Section
@@ -131,6 +165,9 @@ blueprint:
           default: 3306
           selector:
             number:
+              min: 0
+              max: 64000
+              mode: box
 
 
 variables:
@@ -190,6 +227,10 @@ action:
           - condition: trigger
             id: timer_finished
         sequence:
+          - action: switch.turn_on
+            target:
+              entity_id: !input wakeup_switch
+          - delay: "0:00:15"
           - action: button.press
             target:
               entity_id: !input start_button
