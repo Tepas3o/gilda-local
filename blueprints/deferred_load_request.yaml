@@ -88,6 +88,7 @@ blueprint:
         start_sensor:
           name: Deferred Start Sensor
           description: This sensor detects a deferred start request
+          default: binary_sensor.lavadora_de_carga_frontal_remote_start
           selector:
             entity:
               filter:
