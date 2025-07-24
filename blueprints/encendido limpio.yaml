@@ -1,0 +1,244 @@
+# Copyright 2025 CENIA
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+blueprint:
+  name: Encendido limpio GILDA
+  description: Determina el momento óptimo para encender dispositivos
+  domain: automation
+  author: Luis Vera
+
+  input:
+    deferred_load_section:
+      name: Sección de carga
+      description: Parámetros de carga
+      input:
+        load:
+          name: Intensidad
+          description: Intensidad [W]
+          default: 1000.0
+          selector:
+            number:
+              min: 0
+              max: 10000
+              step: 10
+              unit_of_measurement: "W"
+
+        on_duration:
+          name: Duración de encendido
+          description: Duración que el dispositivo debe permanecer encendido una vez activado
+          default:
+            hours: 1
+          selector:
+            duration:
+
+        time_horizon:
+          name: Horizonte temporal
+          description: Horizonte temporal para encender el dispositivo
+          default:
+            hours: 24
+          selector:
+            duration:
+
+        sample_frequency:
+          name: Frecuencia de muestreo
+          description: Frecuencia de muestreo para programar el dispositivo
+          default:
+            minutes: 15
+          selector:
+            duration:
+
+        co2_cost:
+          name: Costo CO2
+          description: Costo CO2 [$/Kg CO2]
+          default: 10.0
+          selector:
+            number:
+              min: 0
+              max: 100
+              step: 0.1
+              unit_of_measurement: "$ / Kg"
+
+        kwh_cost:
+          name: Costo KWH
+          description: Costo KWH [$/KWH]
+          default: 150.0
+          selector:
+            number:
+              min: 0
+              max: 1000
+              step: 1
+              unit_of_measurement: "$ / KWH"
+
+        co2_intensity_entity:
+          name: Sensor de intensidad CO2
+          selector:
+            entity:
+              filter:
+                - domain: sensor
+
+    timer_entity_section:
+      name: Entidad temporizador
+      description: Temporizador para indicar el momento más óptimo para encender el dispositivo
+      input:
+        timer_entity:
+          name: Temporizador 
+          description: Este temporizador nos indica el momento más óptimo para encender el dispositivo
+          selector:
+            entity:
+              filter:
+                - domain: timer
+
+    entity_sensors_section:
+      name: Sensores de entidad
+      description: Permite monitorear y controlar la entidad
+      input:
+        trigger_input_boolean:
+          name: Interruptor de inicio
+          description: Este interruptor detecta una solicitud optimización
+          selector:
+            entity:
+              filter:
+                - domain: input_boolean
+
+    gilda_section:
+      name: Sección Gilda
+      description: Parámetros de conexión de GILDA
+      input:
+        gilda_host:
+          name: GILDA Host
+          default: homeassistant.local
+        gilda_local_port:
+          name: GILDA Opts Port
+          default: 5024
+          selector:
+            number:
+              min: 1
+              max: 65535
+              unit_of_measurement: "port"
+              mode: box
+        gilda_opts_port:
+          name: GILDA Opts Port
+          default: 5012
+          selector:
+            number:
+              min: 1
+              max: 65535
+              unit_of_measurement: "port"
+              mode: box
+
+    sql_section:
+      name: SQL Section
+      description: Parámetros de conexión a la base de datos
+      input:
+        sql_user:
+          name: SQL User
+          default: homeassistant
+        sql_password:
+          name: SQL Password
+          default: gilda
+        sql_host:
+          name: SQL Host
+          default: homeassistant.local
+        sql_database:
+          name: SQL database
+          default: homeassistant
+        sql_port:
+          name: SQL port
+          default: 3306
+          selector:
+            number:
+              min: 1
+              max: 65535
+              unit_of_measurement: "port"
+              mode: box
+
+variables:
+  load: !input load
+  co2_cost: !input co2_cost
+  kwh_cost: !input kwh_cost
+
+trigger_variables:
+  th: !input time_horizon
+  time_horizon: "{{ (th.hours if 'hours' in th.keys() else '0') ~ ':' ~ ('%02d' | format(th.minutes if 'minutes' in th.keys() else 0)) ~ ':' ~ ('%02d' | format(th.seconds if 'seconds' in th.keys() else 0)) }}"
+  od: !input on_duration
+  on_duration: "{{ (od.hours if 'hours' in od.keys() else '0') ~ ':' ~ ('%02d' | format(od.minutes if 'minutes' in od.keys() else 0)) ~ ':' ~ ('%02d' | format(od.seconds if 'seconds' in od.keys() else 0)) }}"
+  sf: !input sample_frequency
+  sample_frequency: "{{ (sf.hours if 'hours' in sf.keys() else '0') ~ ':' ~ ('%02d' | format(sf.minutes if 'minutes' in sf.keys() else 0)) ~ ':'  ~ ('%02d' | format(sf.seconds if 'seconds' in sf.keys() else 0)) }}"
+
+
+trigger:
+  - trigger: state
+    entity_id:
+      - !input trigger_input_boolean
+    to: "on"
+    id: deferred_start
+
+  - trigger: state
+    entity_id:
+      - !input trigger_input_boolean
+    to: "off"
+    id: stop_timer
+
+  - trigger: event
+    event_type: timer.finished
+    event_data:
+      entity_id: !input timer_entity
+    id: timer_finished
+
+action:
+  - choose:
+    - conditions:
+        - condition: trigger
+          id: deferred_start
+      sequence:
+        - action: "pyscript.gilda_deferred_load_request"
+          data:
+            load: "{{ load | float / 1000.0}}"
+            on_period: "{{ on_duration }}"
+            time_horizon: "{{ time_horizon }}"
+            sample_frequency: "{{ sample_frequency }}"
+            co2_cost: "{{ co2_cost | float }}"
+            kwh_cost: "{{ kwh_cost | float }}"
+            co2_intensity_entity: !input co2_intensity_entity
+
+            timer_entity: !input timer_entity
+
+            gilda_host: !input gilda_host
+            gilda_opts_port: !input gilda_opts_port
+            gilda_local_port: !input gilda_local_port
+
+            sql_user: !input sql_user
+            sql_password: !input sql_password
+            sql_host: !input sql_host
+            sql_database: !input sql_database
+            sql_port: !input sql_port
+
+    - conditions:
+        - condition: trigger
+          id: stop_timer
+      sequence:
+        - action: timer.cancel
+          target:
+            entity_id: !input timer_entity
+
+    - conditions:
+        - condition: trigger
+          id: timer_finished
+      sequence:
+        - delay: "{{ on_duration }}"
+        - action: input_boolean.turn_off
+          target:
+            entity_id: !input trigger_input_boolean
+
+mode: single

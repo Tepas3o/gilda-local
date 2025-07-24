@@ -1,0 +1,97 @@
+# Copyright 2025 CENIA
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+blueprint:
+  name: GILDA Refrigerador inteligente - Blueprint
+  description: >
+    Define una temperatura para el freezer del refrigerador inteligente para un horario limpio y sucio.
+  domain: automation
+  input:
+    timer_entity:
+      name: Temporizador
+      description: Temportizador GILDA para indicar el comienzo del horario limpio.
+      selector:
+        entity:
+          domain: timer
+
+    freezer_temperature_entity:
+      name: Entidad de temperatura del freezer.
+      description: Entidad que permite cambiar la temperatura del freezer.
+      selector:
+        entity:
+          domain: number
+
+    valor1:
+      name: Temperatura horario limpio
+      description: Es la temperatura que se establece para el horario limpio para el freezer del refrigerador.
+      default: -16
+      selector:
+        number:
+          min: -30
+          max: 10
+          step: 1
+
+    valor2:
+      name: Temperatura horario sucio
+      description: Es la temperatura que se establece para el horario sucio para el freezer del refrigerador.
+      default: -17
+      selector:
+        number:
+          min: -30
+          max: 10
+          step: 1
+
+    delay_duracion:
+      name: Duración del horario limpio
+      description: Es el tiempo que se establece para el horario limpio para el freezer del refrigerador.
+      default: "00:00:10"
+      selector:
+        duration: {}
+
+    booleano_apagar:
+      name: Apagar GILDA
+      description: Entidad que permite apagar la automatización de GILDA encargada de definir el temporizador.
+      selector:
+        entity:
+          domain: input_boolean
+
+trigger:
+  - platform: event
+    event_type: timer.finished
+    event_data:
+      entity_id: !input timer_entity
+
+condition: []
+
+action:
+  - service: number.set_value
+    target:
+      entity_id: !input freezer_temperature_entity
+    data:
+      value: !input valor1
+
+  - delay: !input delay_duracion
+
+  - service: number.set_value
+    target:
+      entity_id: !input freezer_temperature_entity
+    data:
+      value: !input valor2
+
+  - service: input_boolean.turn_off
+    target:
+      entity_id: !input booleano_apagar
+
+mode: single
+

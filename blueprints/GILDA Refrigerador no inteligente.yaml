@@ -1,0 +1,123 @@
+# Copyright 2025 CENIA
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+blueprint:
+  name: GILDA Refrigerador no inteligente - Blueprint
+  description: >
+    Automatización para controlar un refrigerador no inteligente usando Shelly y un sensor de temperatura.
+    Durante el tiempo del temporizador, el refrigerador se activa solo si la temperatura supera los 6°C.
+    Al finalizar el temporizador, se enciende el refrigerador durante un período definido (horario limpio).
+  domain: automation
+  input:
+    switch_control:
+      name: Switch del refrigerador
+      description: Entidad que permite activar o desactivar el refrigerador (Shelly u otro).
+      selector:
+        entity:
+          domain: switch
+
+    sensor_temperatura:
+      name: Sensor de temperatura
+      description: Sensor que mide la temperatura interna del refrigerador.
+      selector:
+        entity:
+          domain: sensor
+          device_class: temperature
+
+    booleano_inicio:
+      name: Inicio GILDA - Refrigerador
+      description: Switch para iniciar GILDA en el refrigerador.
+      selector:
+        entity:
+          domain: input_boolean
+
+    timer_entity:
+      name: Temporizador GILDA
+      description: Temporizador que define el inicio del horario limpio.
+      selector:
+        entity:
+          domain: timer
+
+    delay_duracion:
+      name: Duración del horario limpio
+      description: Tiempo que el refrigerador estará encendido al finalizar el temporizador.
+      default: "00:10:00"
+      selector:
+        duration: {}
+
+trigger:
+  - platform: state
+    entity_id: !input booleano_inicio
+    to: "on"
+
+  - platform: state
+    entity_id: !input sensor_temperatura
+
+  - platform: event
+    event_type: timer.finished
+    event_data:
+      entity_id: !input timer_entity
+
+condition: []
+
+action:
+  - choose:
+      # Caso 1: Durante el temporizador activo, controlar según temperatura
+      - conditions:
+          - condition: state
+            entity_id: !input timer_entity
+            state: "active"
+          - condition: state
+            entity_id: !input booleano_inicio
+            state: "on"
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: numeric_state
+                    entity_id: !input sensor_temperatura
+                    above: 6
+                sequence:
+                  - service: switch.turn_on
+                    target:
+                      entity_id: !input switch_control
+              - conditions:
+                  - condition: numeric_state
+                    entity_id: !input sensor_temperatura
+                    below: 6
+                sequence:
+                  - service: switch.turn_off
+                    target:
+                      entity_id: !input switch_control
+
+      # Caso 2: Cuando el temporizador finaliza
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ trigger.platform == 'event' and trigger.event.event_type == 'timer.finished' }}
+        sequence:
+          - service: switch.turn_on
+            target:
+              entity_id: !input switch_control
+
+          - delay: !input delay_duracion
+
+          - service: switch.turn_off
+            target:
+              entity_id: !input switch_control
+
+mode: single
+
+
+
+

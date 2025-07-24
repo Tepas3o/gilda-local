@@ -1,0 +1,123 @@
+# Copyright 2025 CENIA
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+blueprint:
+  name: GILDA Termo hervidor no inteligente - Blueprint
+  description: >
+    Control inteligente de un termo hervidor con Shelly. 
+    Durante el horario sucio, si el usuario enciende manualmente el termo y está en modo resistencia, se apaga automáticamente.
+    Al finalizar el timer (inicio de horario limpio), se enciende por un tiempo definido y se reinicia el ciclo.
+  domain: automation
+  input:
+    switch_termo:
+      name: Switch del termo hervidor
+      description: Entidad que permite activar o desactivar el termo hervidor.
+      selector:
+        entity:
+          domain: switch
+
+    sensor_potencia_termo:
+      name: Sensor de potencia del termo
+      description: Sensor de potencia del Shelly que mide el consumo del termo hervidor.
+      selector:
+        entity:
+          domain: sensor
+          device_class: power
+
+    booleano_inicio:
+      name: Inicio GILDA - Termo
+      description: Booleano para iniciar el control automático del termo hervidor.
+      selector:
+        entity:
+          domain: input_boolean
+
+    timer_entity:
+      name: Temporizador GILDA
+      description: Temporizador que define el inicio del horario limpio.
+      selector:
+        entity:
+          domain: timer
+
+    delay_duracion:
+      name: Duración del horario limpio
+      description: Tiempo que el termo estará encendido al finalizar el temporizador.
+      default: "00:10:00"
+      selector:
+        duration: {}
+
+trigger:
+  - platform: state
+    entity_id: !input sensor_potencia_termo
+
+  - platform: state
+    entity_id: !input booleano_inicio
+
+  - platform: state
+    entity_id: !input timer_entity
+
+  - platform: event
+    event_type: timer.finished
+    event_data:
+      entity_id: !input timer_entity
+
+condition: []
+
+action:
+  - choose:
+      - conditions:
+          - condition: state
+            entity_id: !input timer_entity
+            state: "active"
+          - condition: state
+            entity_id: !input booleano_inicio
+            state: "on"
+          - condition: state
+            entity_id: !input switch_termo
+            state: "on"
+          - condition: numeric_state
+            entity_id: !input sensor_potencia_termo
+            above: 0
+            below: 100
+        sequence:
+          - service: switch.turn_off
+            target:
+              entity_id: !input switch_termo
+
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ trigger.platform == 'event' and trigger.event.event_type == 'timer.finished' }}
+        sequence:
+          - service: switch.turn_on
+            target:
+              entity_id: !input switch_termo
+
+          - delay: !input delay_duracion
+
+          - service: switch.turn_off
+            target:
+              entity_id: !input switch_termo
+
+          - service: input_boolean.turn_off
+            target:
+              entity_id: !input booleano_inicio
+
+          - delay:
+              seconds: 30
+
+          - service: input_boolean.turn_on
+            target:
+              entity_id: !input booleano_inicio
+
+mode: single

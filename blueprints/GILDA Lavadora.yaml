@@ -1,0 +1,94 @@
+# Copyright 2025 CENIA
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+blueprint:
+  name: GILDA Lavadora - Blueprint
+  description: >
+    Automatización para activar una lavadora inteligente al inicio del horario limpio.
+    Usa un temporizador para definir el comienzo del horario limpio.
+    Cuando el temporizador finaliza, si la lavadora está lista (remote_start en "on"),
+    se activa el switch de encendido y luego se presiona el botón de inicio remoto.
+  domain: automation
+  input:
+    switch_lavadora:
+      name: Switch de encendido de la lavadora
+      description: Entidad que controla el encendido de la lavadora.
+      selector:
+        entity:
+          domain: switch
+
+    boton_lavadora:
+      name: Botón de inicio remoto
+      description: Entidad tipo botón que simula el inicio remoto de la lavadora.
+      selector:
+        entity:
+          domain: button
+
+    sensor_ready:
+      name: Sensor de inicio remoto
+      description: Sensor binario que indica que la lavadora está lista para iniciar.
+      selector:
+        entity:
+          domain: binary_sensor
+
+    booleano_inicio:
+      name: Inicio GILDA - Lavadora
+      description: Switch para iniciar o detener el funcionamiento automático de la lavadora.
+      selector:
+        entity:
+          domain: input_boolean
+
+    timer_entity:
+      name: Temporizador GILDA
+      description: Temporizador que define el inicio del horario limpio.
+      selector:
+        entity:
+          domain: timer
+
+trigger:
+  - platform: state
+    entity_id: !input booleano_inicio
+    to: "on"
+
+  - platform: event
+    event_type: timer.finished
+    event_data:
+      entity_id: !input timer_entity
+
+condition: []
+
+action:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ trigger.platform == 'event' and trigger.event.event_type == 'timer.finished' }}
+          - condition: state
+            entity_id: !input booleano_inicio
+            state: "on"
+          - condition: state
+            entity_id: !input sensor_ready
+            state: "on"
+        sequence:
+          - service: switch.turn_on
+            target:
+              entity_id: !input switch_lavadora
+
+          - delay: "00:00:03"
+
+          - service: button.press
+            target:
+              entity_id: !input boton_lavadora
+
+mode: single
